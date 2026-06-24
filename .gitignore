@@ -52,3 +52,6 @@ scratch/
 temp/
 *.log
 task-*.log
+
+# PowerPoint presentations
+*.pptx
