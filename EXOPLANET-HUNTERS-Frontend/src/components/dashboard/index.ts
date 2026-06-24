@@ -1,0 +1,20 @@
+/**
+ * Dashboard components export barrel
+ * Exoplanet Vetting Platform
+ */
+
+export { TransitLightCurve } from './TransitLightCurve';
+export { AIPrediction } from './AIPrediction';
+export { QuickActions } from './QuickActions';
+export { ModelSettings } from './ModelSettings';
+export { TodayStats } from './TodayStats';
+export { ModelPerformance } from './ModelPerformance';
+export { NewsPanel } from './NewsPanel';
+export { FactsCarousel } from './FactsCarousel';
+export { ActionButtons } from './ActionButtons';
+export { SignalClassification } from './SignalClassification';
+export { PipelineStatusCard } from './PipelineStatusCard';
+
+export { PlanetVisualization } from './PlanetVisualization';
+export { NASAImagery } from './NASAImagery';
+export { CarbonFootprint } from './CarbonFootprint';
