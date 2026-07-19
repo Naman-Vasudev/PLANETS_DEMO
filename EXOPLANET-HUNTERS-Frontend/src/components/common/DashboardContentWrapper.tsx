@@ -88,13 +88,26 @@ export const DashboardContentWrapper: React.FC<DashboardContentWrapperProps> = (
         payload.duration_override = parseFloat(durationOverride);
       }
 
+      // Pipeline can take 3-5 min on cloud (TF load + MAST download).
+      // Use a 10-minute timeout so the browser doesn't silently drop the request.
+      const controller = new AbortController();
+      const hardTimeout = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+      const reassureTimeout = setTimeout(() => {
+        showToast('info', '⏳ Still working… downloading light curve & running AI models (can take 2-4 min on first run)', 8000);
+      }, 30_000);
+
       const response = await fetch(`${API_BASE}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
+      clearTimeout(hardTimeout);
+      clearTimeout(reassureTimeout);
+
       const data: PredictionResult & { error?: string } = await response.json();
+
 
       if (!response.ok || data.error) {
         showToast('error', `Pipeline error: ${data.error || 'Unknown error'}`, 5000);
