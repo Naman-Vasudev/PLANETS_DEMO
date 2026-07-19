@@ -59,11 +59,21 @@ except ImportError as _e:
     print(f"Warning: report_generator not available: {_e}", file=sys.stderr)
 
 
-def set_cors_headers(handler):
-    """Allow requests from the React dev server on any port."""
-    handler.set_header("Access-Control-Allow-Origin", "*")
-    handler.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    handler.set_header("Access-Control-Allow-Headers", "Content-Type")
+
+class CORSHandler(tornado.web.RequestHandler):
+    """Base handler that injects CORS headers on every request, including OPTIONS preflight."""
+
+    def prepare(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.set_header("Access-Control-Max-Age", "86400")
+
+    def options(self, *args, **kwargs):
+        # Preflight: headers already set by prepare(), just return 204.
+        self.set_status(204)
+        self.finish()
+
 
 
 def read_image_b64(path: str) -> str | None:
@@ -270,28 +280,20 @@ def _parse_float(text: str, pattern: str):
 
 # ── Request Handlers ───────────────────────────────────────────────────────────
 
-class HealthHandler(tornado.web.RequestHandler):
+class HealthHandler(CORSHandler):
     """GET /api/v1/health — simple liveness check."""
 
-    def options(self):
-        set_cors_headers(self)
-        self.set_status(204)
 
     def get(self):
-        set_cors_headers(self)
         self.write({"status": "ok", "model": "AstroNet CNN v3", "port": PORT})
 
 
-class PredictHandler(tornado.web.RequestHandler):
+class PredictHandler(CORSHandler):
     """POST /api/v1/predict — run the full AstroNet pipeline for a TIC ID."""
 
-    def options(self):
-        set_cors_headers(self)
-        self.set_status(204)
 
     @tornado.gen.coroutine
     def post(self):
-        set_cors_headers(self)
         try:
             body = json.loads(self.request.body)
             tic_id = str(body.get("tic_id", "")).strip()
@@ -336,15 +338,11 @@ class PredictHandler(tornado.web.RequestHandler):
             self.write({"error": str(exc)})
 
 
-class NewsHandler(tornado.web.RequestHandler):
+class NewsHandler(CORSHandler):
     """GET /api/v1/news — fetch latest space and exoplanet news dynamically from RSS."""
 
-    def options(self):
-        set_cors_headers(self)
-        self.set_status(204)
 
     def get(self):
-        set_cors_headers(self)
         try:
             import urllib.request
             from xml.etree import ElementTree
@@ -409,7 +407,7 @@ class NewsHandler(tornado.web.RequestHandler):
             })
 
 
-class ReportHandler(tornado.web.RequestHandler):
+class ReportHandler(CORSHandler):
     """
     POST /api/v1/report
 
@@ -418,13 +416,9 @@ class ReportHandler(tornado.web.RequestHandler):
     Falls back to plain-text if reportlab is unavailable.
     """
 
-    def options(self):
-        set_cors_headers(self)
-        self.set_status(204)
 
     @tornado.gen.coroutine
     def post(self):
-        set_cors_headers(self)
         try:
             body = json.loads(self.request.body)
             # If the request contains a full pipeline result, use it directly
