@@ -61,18 +61,18 @@ except ImportError as _e:
 
 
 class CORSHandler(tornado.web.RequestHandler):
-    """Base handler that injects CORS headers on every request, including OPTIONS preflight."""
+    """Base handler — CORS headers injected via set_default_headers (survives all error responses)."""
 
-    def prepare(self):
+    def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.set_header("Access-Control-Max-Age", "86400")
 
     def options(self, *args, **kwargs):
-        # Preflight: headers already set by prepare(), just return 204.
         self.set_status(204)
         self.finish()
+
 
 
 
