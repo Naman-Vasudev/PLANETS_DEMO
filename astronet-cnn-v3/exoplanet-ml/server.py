@@ -29,8 +29,11 @@ BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.environ.get("MODEL_DIR", os.path.join(BASE_DIR, "MODEL_DIR"))
 TESS_DATA_DIR = os.environ.get("TESS_DATA_DIR", os.path.join(BASE_DIR, "KEPLER_DATA_DIR"))
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", os.path.join(BASE_DIR, "kepler_pictures"))
-PYTHON_EXE = os.path.join(BASE_DIR, "..", "venv_compat", "Scripts", "python.exe")
-PORT = 8000
+# Auto-detect Python executable: use venv on Windows, system python on Linux/cloud
+_win_python = os.path.join(BASE_DIR, "..", "venv_compat", "Scripts", "python.exe")
+PYTHON_EXE = _win_python if os.path.exists(_win_python) else sys.executable
+# PORT: Render/Railway inject $PORT at runtime; fall back to 8000 locally
+PORT = int(os.environ.get("PORT", 8000))
 
 # ── Optional classification + explainability modules ─────────────────────────
 # Imported at server startup so model initialisation happens once only.
